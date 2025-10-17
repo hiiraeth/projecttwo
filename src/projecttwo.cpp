@@ -107,6 +107,6 @@ void readInFile(std::string csvPath)
 int main()
 {
 
-
+    std::cout << "test";
     return 0;
 }
