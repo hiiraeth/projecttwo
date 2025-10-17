@@ -10,7 +10,6 @@ struct Course
     std::string courseID;
     std::string courseTitle;
     std::vector<std::string> prerequisites;
-    std::vector<std::string> validatePrereqs;
 };
 
 class HashTable 
@@ -63,9 +62,46 @@ public:
     void Search(std::string id);
 };
 
-void readInFile(std::ifstream inFile) 
+void readInFile(std::string csvPath) 
 {
-    
+    std::ifstream inFile;
+    std::vector<std::string> row;
+    std::string line;
+    std::string item;
+
+    std::vector<std::string> validatePrereqs;
+
+    inFile.open(csvPath);
+
+    while (inFile.good())
+    {
+        row.clear();
+
+        std::getline(inFile, line);
+        std::stringstream ss_cut(line);
+
+        while (std::getline(ss_cut, item, ','))
+        {
+            row.push_back(item);
+        }
+
+        if (row.size() < 2)
+        {
+            std::cerr << "ERROR: Row needs at least 2 values" << std::endl;
+            continue;
+        }
+
+        std::string id = row[0];
+        std::string name = row[1];
+
+        if (row.size() > 2)
+        {
+            for (auto prereq : row)
+            {
+                validatePrereqs.push_back(prereq);
+            }
+        }
+    }
 }
 
 int main()

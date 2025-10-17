@@ -1,3 +1,4 @@
+courseID,courseTitle,prereq1,prereq2,
 MATH201,Discrete Mathematics,,
 CSCI300,Introduction to Algorithms,CSCI200,MATH201
 CSCI350,Operating Systems,CSCI300,
