@@ -62,6 +62,17 @@ public:
     void Search(std::string id);
 };
 
+unsigned int HashTable::hash(int key)
+{
+    return key % tableSize;
+}
+
+Course createCourse(std::string id, std::string name, std::vector<std::string> prereqs)
+{
+    Course newCourse{id, name, prereqs};
+    return newCourse;
+}
+
 void readInFile(std::string csvPath) 
 {
     std::ifstream inFile;
@@ -93,6 +104,7 @@ void readInFile(std::string csvPath)
 
         std::string id = row[0];
         std::string name = row[1];
+        std::vector<std::string> prereqs;
 
         if (row.size() > 2)
         {
@@ -101,12 +113,15 @@ void readInFile(std::string csvPath)
                 validatePrereqs.push_back(prereq);
             }
         }
+
+
     }
 }
+
+
 
 int main()
 {
 
-    std::cout << "test";
     return 0;
 }
