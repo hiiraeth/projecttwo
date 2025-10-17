@@ -140,21 +140,42 @@ void HashTable::InsertCourse(Course course)
 
 void HashTable::PrintAllCourses()
 {
-    for (int i = 0; i < nodes.size(); i++)
-    {
-        Node& head = nodes.at(i);
-        if (head.key == UINT_MAX)
-            continue;
+    std::vector<Course> allCourses;
 
-        Node* current = &head;
-        while (current != nullptr)
-        {
-            std::cout << current->course.courseID << ", " <<
-                current->course.courseTitle << "\n";
-            
-            current = current->next;
-        }
+    for (auto& elem : nodes)
+    {
+        allCourses.push_back(elem.course);
     }
+
+    std::sort(allCourses.begin(), allCourses.end(), [](auto a, auto b)
+    {
+        return a.courseID < b.courseID;
+    });
+
+    for (auto& elem : allCourses)
+    {
+        if (elem.courseID == "0" || elem.courseTitle == "Title")
+            continue;
+            
+        std::cout << elem.courseID << ", " <<
+            elem.courseTitle << "\n";
+    }
+    
+    // for (int i = 0; i < nodes.size(); i++)
+    // {
+    //     Node& head = nodes.at(i);
+    //     if (head.key == UINT_MAX)
+    //         continue;
+
+    //     Node* current = &head;
+    //     while (current != nullptr)
+    //     {
+    //         std::cout << current->course.courseID << ", " <<
+    //             current->course.courseTitle << "\n";
+            
+    //         current = current->next;
+    //     }
+    // }
 
     std::cout << "\n";
 }
