@@ -5,7 +5,7 @@
 #include <vector>
 #include <climits>
 #include <limits>
-#include <map>
+#include <algorithm>
 
 struct Course
 {
@@ -17,7 +17,6 @@ struct Course
     {
         courseID = "0";
         courseTitle = "Title";
-        prerequisites;
     }
 
     Course(std::string id, std::string title, std::vector<std::string> prereqs)
@@ -71,13 +70,18 @@ public:
     ~HashTable();
 
     void InsertCourse(Course course);
-    void RemoveCourse(std::string id);
     void PrintAllCourses();
     void Search(std::string id);
 };
 
 HashTable::HashTable()
 {
+    nodes.resize(tableSize);
+}
+
+HashTable::HashTable(unsigned int sizeOfTable)
+{
+    tableSize = sizeOfTable;
     nodes.resize(tableSize);
 }
 
@@ -138,7 +142,7 @@ void HashTable::PrintAllCourses()
 {
     for (int i = 0; i < nodes.size(); i++)
     {
-        Node& head = nodes[i];
+        Node& head = nodes.at(i);
         if (head.key == UINT_MAX)
             continue;
 
@@ -153,6 +157,34 @@ void HashTable::PrintAllCourses()
     }
 
     std::cout << "\n";
+}
+
+void HashTable::Search(std::string id)
+{
+    int key = hash(atoi(id.substr(4,3).c_str()));
+
+    Node* searchNode = &nodes.at(key);
+    std::vector<std::string> prereqs = searchNode->course.prerequisites;
+
+    std::cout << searchNode->course.courseID << ", " << searchNode->course.courseTitle << "\n";
+    std::cout << "Prerequisites: ";
+
+    if (!(prereqs.empty()))
+    {
+        for (std::string& elem : prereqs)
+        {
+            if (elem == *(prereqs.end() - 1))
+                std::cout << elem;
+            else
+                std::cout << elem << ", ";
+        }
+    }
+    else
+    {
+        std::cout << "None";
+    }
+
+    std::cout << "\n\n";
 }
 
 void trim(std::string& item)
@@ -178,16 +210,16 @@ void trim(std::string& item)
  * Load the CSV file into the hashtable
  * 
  * @param csvPath           path of CSV file to read from
- * @param validatePrereqs   vector of prereqs that need to be validated
  * @param courses           hashtable of courses
+ * @param courseids         vector of all course IDs
  * 
  * @return courses          returns hashtable by reference
  * @return validatePrereqs  returns prereqs that need validation
  */
-void loadFileIntoHashtable(std::string csvPath, HashTable* courses) 
+void loadFileIntoHashtable(std::string csvPath, HashTable* courses, std::vector<std::string>& courseids) 
 {
     std::ifstream inFile(csvPath);
-    std::vector<std::string> row, allCourseIDs, prereqs;
+    std::vector<std::string> row, prereqs;
     std::string line, item;
 
     if (!inFile.is_open())
@@ -206,7 +238,7 @@ void loadFileIntoHashtable(std::string csvPath, HashTable* courses)
         if (line == "" || line == "\r")
             continue;
         else
-            allCourseIDs.push_back(line);
+            courseids.push_back(line);
 
         inFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     }
@@ -249,9 +281,9 @@ void loadFileIntoHashtable(std::string csvPath, HashTable* courses)
         {
             for (int i = 2; i < row.size(); i++)
             {
-                for (int j = 0; j < allCourseIDs.size(); j++)
+                for (int j = 0; j < courseids.size(); j++)
                 {
-                    if (row.at(i) == allCourseIDs.at(j))
+                    if (row.at(i) == courseids.at(j))
                     {
                         prereqs.push_back(row.at(i));
                     }
@@ -278,11 +310,28 @@ void showMenu()
     std::cout << "|- Enter choice: ";
 }
 
-int menuChoice(int choice, HashTable& courses, bool& load)
+bool validateID(std::vector<std::string>& courseids, std::string choice)
+{
+    trim(choice);
+
+    auto it = std::find(courseids.begin(), courseids.end(), choice);
+
+    if (it == courseids.end())
+    {
+        std::cerr << "ERROR: Invalid course.\n\n";
+        return false;
+    }
+
+    return true;
+}
+
+int menuChoice(int choice, HashTable& courses, bool& load, std::vector<std::string>& courseids)
 {
     const int MIN = 1;
     const int MAX = 3;
     const int EXIT = 9;
+
+    std::string idChoice = "";
     
     std::cin >> choice;
     std::cout << "\n";
@@ -299,11 +348,11 @@ int menuChoice(int choice, HashTable& courses, bool& load)
         case 1:
             if (load)
             {
-                std::cout << "ERROR: File already loaded.\n\n";
+                std::cerr << "ERROR: File already loaded.\n\n";
                 break;
             }
 
-            loadFileIntoHashtable("ABCU_Courses.csv", &courses);
+            loadFileIntoHashtable("ABCU_Courses.csv", &courses, courseids);
             std::cout << "File loaded successfully.\n\n";
             load = true;
 
@@ -312,18 +361,33 @@ int menuChoice(int choice, HashTable& courses, bool& load)
         case 2:
             if (!load)
             {
-                std::cout << "ERROR: Data structure not loaded.\n\n";
+                std::cerr << "ERROR: Data structure not loaded.\n\n";
                 break;
             }
 
             courses.PrintAllCourses();
             break;
 
-        case 3:
-            std::cout << "Feature coming soon.\n" << std::endl;
+        case 3: {
+            if (!load)
+            {
+                std::cerr << "ERROR: Data structure not loaded.\n\n";
+                break;
+            }
+            
+            std::cout << "|- Enter course ID (ex: CSCI100): ";
+            std::cin >> idChoice;
+            std::cout << "\n";
+
+            if (!validateID(courseids, idChoice))
+                break;
+            
+            courses.Search(idChoice);
             break;
+        }
 
         case 9:
+            std::cout << "Thanks for using the program." << std::endl;
             break;
 
         default:
@@ -336,16 +400,15 @@ int menuChoice(int choice, HashTable& courses, bool& load)
 int main()
 {
     int choice = 0;
+    std::vector<std::string> courseids;
     HashTable courses;
     bool isLoaded = false;
 
     while (choice != 9)
     {
         showMenu();
-        choice = menuChoice(choice, courses, isLoaded);
+        choice = menuChoice(choice, courses, isLoaded, courseids);
     }
-
-    std::cout << "Thanks for using the program." << std::endl;
 
     return 0;
 }
