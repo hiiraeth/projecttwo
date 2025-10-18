@@ -269,6 +269,8 @@ void HashTable::Search(std::string id)
  * left and spaces, tabs, and '\r' from the right.
  * Will then trim the courseID and return it by ref.
  * 
+ * @param item  item (courseID) to trim
+ * 
  * @return returns trimmed courseID by reference
  */
 void trim(std::string& item)
@@ -447,6 +449,7 @@ bool validateID(std::vector<std::string>& courseids, std::string choice)
  * each case.
  * 
  * @param choice        user input, menu choice
+ * @param csvPath       path to CSV file to open
  * @param courses       hashtable of all courses
  * @param load          check if courses have already been loaded
  * @param courseids     vector of all courseids for searching
